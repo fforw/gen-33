@@ -1,3 +1,3 @@
-# Simple Starter
+# genuary2022.12
 
-Simple JS build starter for simple, client-only demos.
+Block head packing. Code is horrible, had a surprisingly hard time. Long time since I wrote a software renderer. 

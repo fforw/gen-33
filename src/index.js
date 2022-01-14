@@ -25,6 +25,7 @@ let canvas;
 const blue = Color.from("#0f427e")
 
 const blipRate = 0.125
+let blipPower
 
 function drawInsideSquare(palette, face)
 {
@@ -125,25 +126,19 @@ function drawInsideSquare(palette, face)
     ctx.lineWidth = 4
     rombus(maxDistance, true, true, true);
 
+
     for (let i = 0; i < blip.length; i+=2)
     {
         const x = blip[i];
         const y = blip[i+1];
 
         const rnd = Math.random();
-        const r = 2 + Math.pow(rnd, 12) * 64
-        ctx.fillStyle = `rgba(255,255,255,${0.2 + Math.random() * 0.5}`
+        const r = 2 + Math.pow(rnd, blipPower) * 64
+        ctx.fillStyle = `rgba(255,255,255,${0.3 + Math.random() * 0.5}`
         ctx.beginPath()
         ctx.moveTo(x+r,y)
         ctx.arc(x,y,r,0,TAU,true)
         ctx.fill()
-
-        ctx.strokeStyle = "#fff";
-        ctx.lineWidth = 1;
-        ctx.beginPath()
-        ctx.moveTo(x,y - r)
-        ctx.arc(x,y,r-1,-TAU/4,-TAU/2,true)
-        ctx.stroke()
     }
 
 }
@@ -185,6 +180,7 @@ window.onload = (
 
         const paint = () => {
 
+            blipPower = 9 + Math.random() * 5 
             const palette = randomPalette().slice();
             palette.push("#000")
 

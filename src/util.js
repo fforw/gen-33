@@ -19,6 +19,6 @@ export default function centroid(face) {
 
     } while (curr !== first)
 
-    return [x / count, y / count];
+    return { x: x / count, y: y / count } ;
 }
 

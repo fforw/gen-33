@@ -1,5 +1,5 @@
-# genuary2022.12
+# gen-33
 
-Block head packing. Code is horrible, had a surprisingly hard time. Long time since I wrote a software renderer. 
+Reusing the packing algorithm of genuary 12th for some abstract shapes with overlapping edges
 
-[Live Demo](http://fforw.de/static/demo/genuary2022.12/)
+[Live Demo](http://fforw.de/static/demo/gen-33/)

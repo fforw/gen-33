@@ -27,141 +27,127 @@ const blue = Color.from("#0f427e")
 const blipRate = 0.125
 let blipPower
 
-function drawInsideSquare(palette, face)
+function drawArrow(x0, y0, x1, y1)
 {
-    const blip = []
+    const { width, height} = config;
 
-    const {width, height} = config;
+    const cx = width/2;
+    const cy = height/2;
 
-    const cx = width / 2;
-    const cy = height / 2;
+    const dy = y1 - y0;
+    const dx = x1 - x0;
 
-    const ce = centroid(face)
-
-    let maxDistance = -Infinity
-    let minDistance = Infinity
-
-    let curr = face.halfEdge
-    do
+    if (dx * dx + dy * dy > 2)
     {
-        const { x, y } = curr.vertex
+        const nx = dy * 0.08
+        const ny = -dx * 0.08
+
+        const start = 0.01
+        const end = 0.5
+
+        const x2 = x0 + (x1 - x0) * start
+        const y2 = y0 + (y1 - y0) * start
+        const x3 = x0 + (x1 - x0) * end
+        const y3 = y0 + (y1 - y0) * end
+
+        const x4 = x0 + (x1 - x0) * (start + (end - start) * 0.6)
+        const y4 = y0 + (y1 - y0) * (start + (end - start) * 0.6)
+
+        ctx.beginPath()
+        ctx.moveTo(cx + x2, cy + y2)
+        ctx.lineTo(cx + x3, cy + y3)
+
+        ctx.moveTo(cx + x3, cy + y3)
+        ctx.lineTo(cx + x4 + nx, cy + y4 + ny)
+        ctx.moveTo(cx + x3, cy + y3)
+        ctx.lineTo(cx + x4 - nx, cy + y4 - ny)
+        ctx.stroke()
+    }
+}
 
 
-        const dx = ce.x - x
-        const dy = ce.y - y
+function renderDebugFace(face, drawNext = false, ids = false)
+{
+    const { width, height} = config;
 
+    const cx = width/2;
+    const cy = height/2;
 
-        const distSq = dx * dx + dy * dy
+    const faceCentroid = face.centroid
 
-        if (distSq < minDistance)
-        {
-            minDistance = distSq
-        }
-        if (distSq > maxDistance)
-        {
-            maxDistance = distSq
-        }
-        curr = curr.next
-
-    } while( curr !== face.halfEdge)
-
-    const rnd = 0.4 + Math.random() * 0.218;
-    minDistance = Math.pow(minDistance, rnd)
-    maxDistance = Math.sqrt(maxDistance)
-
-    const scaleCoords = (x,y,len) => {
-        let dx = x - ce.x
-        let dy = y - ce.y
-
-        const dist = Math.sqrt(dx * dx + dy * dy)
-
-        return [
-            cx + ce.x + dx *len / dist,
-            cy + ce.y + dy *len / dist,
-        ]
+    if (ids)
+    {
+        const label = String(face.id);
+        const tm = ctx.measureText(label);
+        ctx.fillText(label, cx + faceCentroid[0] - tm.width/2, cy + faceCentroid[1] + 4)
+    }
+    else
+    {
+        //ctx.fillRect(cx + faceCentroid[0] - 1, cy + faceCentroid[1] - 1, 2, 2)
     }
 
+    const first = face.halfEdge;
+    let curr = first;
 
-    const rombus = (distance, stroke, fill, blips) => {
-        ctx.beginPath()
-        curr = face.halfEdge
-        let {x, y} = curr.vertex
-        ctx.moveTo(...scaleCoords(x, y, distance))
-        curr = curr.next
+    ctx.save()
+    ctx.fillStyle = Color.fromHSL(Math.random(), 0.8, 0.5).toRGBHex()
 
-        do
+    ctx.beginPath()
+    do
+    {
+        const next = curr.next;
+
+
+        const x0 = 0|(cx + curr.vertex.x)
+        const y0 = 0|(cy + curr.vertex.y)
+        const x1 = 0|(cx + next.vertex.x)
+        const y1 = 0|(cy + next.vertex.y)
+
+        if (curr === first)
         {
-            const {x, y} = curr.vertex
-            const [x1,y1] = scaleCoords(x, y, distance);
-            ctx.lineTo(x1,y1)
+            ctx.moveTo(x0, y0)
+        }
+        ctx.lineTo(x1, y1)
 
-            curr = curr.next
+        curr = next
+    }  while (curr !== first)
+    ctx.stroke()
+    ctx.restore()
 
-            if (blips && Math.random() < blipRate)
+    do
+    {
+        const next = curr.next;
+
+        const x0 = 0|(cx + curr.vertex.x)
+        const y0 = 0|(cy + curr.vertex.y)
+        const x1 = 0|(cx + next.vertex.x)
+        const y1 = 0|(cy + next.vertex.y)
+
+        const x2 = 0|((x0 + x1)/2 - cx)
+        const y2 = 0|((y0 + y1)/2 - cy)
+
+        if (drawNext)
+        {
+            const { twin }  = curr;
+            if (twin)
             {
-                blip.push(x1,y1)
+                const twinCentroid = twin.face.centroid
+
+                const [ x0, y0 ] = faceCentroid;
+                const [ x1, y1 ] = twinCentroid;
+
+                drawArrow(x2, y2, x0, y0);
+                //drawArrow(x2, y2, x1, y1);
+
             }
 
-        } while (curr !== face.halfEdge)
-        ({x, y} = curr.vertex)
-        ctx.lineTo(...scaleCoords(x, y, distance))
-
-        if (stroke)
-        {
-            ctx.stroke()
-        }
-        if (fill)
-        {
-            ctx.fill()
         }
 
-    };
-
-
-
-    ctx.strokeStyle = "#000"
-    ctx.lineWidth = 2
-    rombus(minDistance, true, false);
-    ctx.fillStyle = Color.from(palette[0|Math.random() * palette.length]).toRGBA(0.5)
-    ctx.lineWidth = 4
-    rombus(maxDistance, true, true, true);
-
-
-    for (let i = 0; i < blip.length; i+=2)
-    {
-        const x = blip[i];
-        const y = blip[i+1];
-
-        const rnd = Math.random();
-        const r = 2 + Math.pow(rnd, blipPower) * 64
-        ctx.fillStyle = `rgba(255,255,255,${0.3 + Math.random() * 0.5}`
-        ctx.beginPath()
-        ctx.moveTo(x+r,y)
-        ctx.arc(x,y,r,0,TAU,true)
-        ctx.fill()
-    }
+        curr = next
+    }  while (curr !== first)
 
 }
 
-function inScreen(face)
-{
-    const { width, height} = config
-
-    let current = face.halfEdge
-    do
-    {
-        const { x, y } = current.vertex;
-
-        if (x < 0 || x >= width || y < 0 || y >= height)
-        {
-            return false
-        }
-
-        current = current.next
-    } while (current !== face.halfEdge)
-
-    return true
-}
 
 window.onload = (
     () => {
@@ -204,8 +190,90 @@ window.onload = (
 
             //faces = [ faces.find(inScreen) ]
 
+
+            let count = 300;
+
+            const flowers = new Map()
+            const colors = new Map()
+
+            const neighboringFace = (startEdge) => startEdge.twin && startEdge.twin.face
+
+            const randomFlower = faces => {
+
+                const index = 0 | Math.random() * faces.length;
+                const central = faces[index];
+
+                flowers.set(central, index)
+
+                let curr = central.halfEdge
+                for (let i=0; i < 4; i++)
+                {
+                    const nf = neighboringFace(curr)
+                    if (nf)
+                    {
+                        flowers.set(nf, -1 - index)
+                    }
+
+                    curr = curr.next
+                }
+            };
+
+            for (let i=0; i < count; i++)
+            {
+                randomFlower(faces)
+            }
+
+            const getColor = index => {
+                const entry = colors.get(index);
+                if (!entry)
+                {
+                    const newEntry = {
+                        center: palette[0|Math.random() * palette.length],
+                        petals: palette[0|Math.random() * palette.length],
+                    };
+
+                    colors.set(index, newEntry)
+                    return newEntry
+
+                }
+                return entry;
+            }
+
+            console.log("FLOWERS", flowers)
+
             faces.forEach(face => {
-                drawInsideSquare(palette, face)
+
+                const index = flowers.get(face);
+
+                if (index !== undefined)
+                {
+                    if(index >= 0)
+                    {
+                        const { center } = getColor(index)
+
+                        ctx.fillStyle = center;
+                    }
+                    else
+                    {
+                        const { petals } = getColor(-(index + 1))
+                        ctx.fillStyle = petals;
+                    }
+                    ctx.beginPath()
+
+                    let curr = face.halfEdge;
+
+                    const { x, y } = curr.vertex
+                    ctx.moveTo(cx + x, cy + y);
+                    curr = curr.next
+                    while(curr !== face.halfEdge)
+                    {
+                        const { x, y } = curr.vertex
+                        ctx.lineTo(cx + x, cy + y);
+                        curr = curr.next
+                    }
+                    ctx.fill();
+                }
+
             })
 
 

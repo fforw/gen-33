@@ -65,7 +65,7 @@ function shuffle(a) {
 
 
 
-function findFaceIndex(faces, other)
+export function findFaceIndex(faces, other)
 {
     if (!other)
     {
@@ -95,7 +95,7 @@ function resetFacesInLoop(prev, face)
 }
 
 
-function removeEdge(faces, edge)
+export function removeEdge(faces, edge, onlyFromTris = true)
 {
     if (!edge || !edge.halfEdge || !edge.halfEdge.twin)
     {
@@ -105,7 +105,7 @@ function removeEdge(faces, edge)
     const he = edge.halfEdge;
     const face = he.face
     const other = he.twin.face
-    if (face.length !== 3 || other.length !== 3)
+    if (onlyFromTris && (face.length !== 3 || other.length !== 3))
     {
         return;
     }
@@ -116,8 +116,6 @@ function removeEdge(faces, edge)
         throw new Error("Did not find twin face in faces array")
     }
     faces.splice(index, 1)
-
-
 
     const prev = he.prev
     const twinPrev = he.twin.prev
@@ -792,9 +790,8 @@ export default class HexagonPatch
         quickFix(faces)
         relax(faces)
         pixelatePositions(faces)
-        faces.forEach(validateFace)
-
-        validateFaces(faces)
+        // faces.forEach(validateFace)
+        // validateFaces(faces)
         return faces;
     }
 }

@@ -55,7 +55,6 @@ export class Vertex
 
 export class Edge
 {
-
     /**
      * One of the two half edges of the edge.
      *
@@ -70,14 +69,24 @@ export class Edge
 }
 let faceCounter = 0;
 
+
 export class Face
 {
+    stroked = 1
+
     /**
      * First half edge of the face interior, part of a closed loop back to the fist edge.
      *
      * @type {HalfEdge}
      */
     halfEdge = null;
+
+    /**
+     * Color for this face
+     * @type {Color}
+     */
+    color = null
+    
     constructor(halfEdge)
     {
         this.halfEdge = halfEdge;
@@ -109,17 +118,21 @@ export class Face
         let z = 0;
         let count = 0;
 
+        const visited = new Set()
+
         const first = this.halfEdge
         let curr = first
         do
         {
+            visited.add(curr)
+
             x += curr.vertex.x;
             y += curr.vertex.y;
             z += curr.vertex.z;
             curr = curr.next
             count++;
 
-        } while (curr !== first)
+        } while (!visited.has(curr))
 
         return [x / count, y / count, z/count];
     }
@@ -160,7 +173,6 @@ export class HalfEdge
      * @type {Face}
      */
     face = null;
-
 
     constructor(next, vertex, edge, face)
     {
